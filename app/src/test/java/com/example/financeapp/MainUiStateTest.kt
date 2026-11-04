@@ -139,4 +139,97 @@ class MainUiStateTest {
         assertEquals(1, viewModel.uiState.transactionCount)
         assertEquals(TransactionError.AMOUNT_TOO_LARGE, viewModel.uiState.error)
     }
+
+    @Test
+    fun descriptionChanged_updatesStateAndClearsError() {
+        val viewModel = TransactionViewModel()
+
+        viewModel.onEvent(MainUiEvent.InvalidTransaction)
+        viewModel.onEvent(MainUiEvent.DescriptionChanged("Продукты"))
+
+        assertEquals("Продукты", viewModel.uiState.description)
+        assertEquals(null, viewModel.uiState.error)
+    }
+
+    @Test
+    fun typeChanged_updatesStateAndClearsError() {
+        val viewModel = TransactionViewModel()
+
+        viewModel.onEvent(MainUiEvent.InvalidTransaction)
+        viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.INCOME))
+
+        assertEquals(TransactionType.INCOME, viewModel.uiState.type)
+        assertEquals(null, viewModel.uiState.error)
+    }
+
+    @Test
+    fun amountChanged_updatesStateAndClearsError() {
+        val viewModel = TransactionViewModel()
+
+        viewModel.onEvent(MainUiEvent.InvalidTransaction)
+        viewModel.onEvent(MainUiEvent.AmountChanged("125"))
+
+        assertEquals("125", viewModel.uiState.amount)
+        assertEquals(null, viewModel.uiState.error)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun addTransactionEvent_rejectsNegativeAmount() {
+        val viewModel = TransactionViewModel()
+
+        viewModel.onEvent(
+            MainUiEvent.AddTransaction(
+                Transaction(
+                    amount = -100,
+                    description = "Покупка",
+                    type = TransactionType.EXPENSE,
+                ),
+            ),
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun addTransactionEvent_rejectsBlankDescription() {
+        val viewModel = TransactionViewModel()
+
+        viewModel.onEvent(
+            MainUiEvent.AddTransaction(
+                Transaction(
+                    amount = 100,
+                    description = " ",
+                    type = TransactionType.EXPENSE,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun balanceUnderflow_isRejected() {
+        val viewModel = TransactionViewModel()
+
+        viewModel.onEvent(
+            MainUiEvent.AddTransaction(
+                Transaction(
+                    amount = Int.MAX_VALUE,
+                    description = "Покупка",
+                    type = TransactionType.EXPENSE,
+                ),
+            ),
+        )
+
+        viewModel.onEvent(
+            MainUiEvent.AddTransaction(
+                Transaction(
+                    amount = 2,
+                    description = "Покупка",
+                    type = TransactionType.EXPENSE,
+                ),
+            ),
+        )
+
+        assertEquals(-Int.MAX_VALUE, viewModel.uiState.balance)
+        assertEquals(1, viewModel.uiState.transactionCount)
+        assertEquals(1, viewModel.uiState.transactions.size)
+        assertEquals(TransactionError.AMOUNT_TOO_LARGE, viewModel.uiState.error)
+    }
 }
