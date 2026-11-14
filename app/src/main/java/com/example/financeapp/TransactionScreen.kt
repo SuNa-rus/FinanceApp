@@ -45,11 +45,15 @@ internal fun TransactionScreen(viewModel: TransactionViewModel = viewModel()) {
                 ),
             )
 
+            if (state.isLoading) {
+                Text(stringResource(R.string.transaction_loading))
+            }
+
             TransactionFields(state, viewModel)
             TransactionTypeSelector(state, viewModel)
             TransactionErrorMessage(state.error)
 
-            Button(onClick = viewModel::addTransaction) {
+            Button(onClick = viewModel::addTransaction, enabled = state.isDatabaseReady && !state.isSaving) {
                 Text(stringResource(R.string.transaction_add))
             }
 
@@ -63,6 +67,7 @@ internal fun TransactionScreen(viewModel: TransactionViewModel = viewModel()) {
 private fun TransactionFields(state: MainUiState, viewModel: TransactionViewModel) {
     OutlinedTextField(
         value = state.description,
+        enabled = state.isDatabaseReady && !state.isSaving,
         onValueChange = {
             viewModel.onEvent(MainUiEvent.DescriptionChanged(it))
         },
@@ -73,6 +78,7 @@ private fun TransactionFields(state: MainUiState, viewModel: TransactionViewMode
 
     OutlinedTextField(
         value = state.amount,
+        enabled = state.isDatabaseReady && !state.isSaving,
         onValueChange = {
             viewModel.onEvent(MainUiEvent.AmountChanged(it))
         },
@@ -91,6 +97,7 @@ private fun TransactionTypeSelector(state: MainUiState, viewModel: TransactionVi
     Row {
         FilterChip(
             selected = state.type == TransactionType.EXPENSE,
+            enabled = state.isDatabaseReady && !state.isSaving,
             onClick = {
                 viewModel.onEvent(
                     MainUiEvent.TypeChanged(TransactionType.EXPENSE),
@@ -103,6 +110,7 @@ private fun TransactionTypeSelector(state: MainUiState, viewModel: TransactionVi
 
         FilterChip(
             selected = state.type == TransactionType.INCOME,
+            enabled = state.isDatabaseReady && !state.isSaving,
             onClick = {
                 viewModel.onEvent(
                     MainUiEvent.TypeChanged(TransactionType.INCOME),
@@ -125,6 +133,9 @@ private fun TransactionErrorMessage(error: TransactionError?) {
 
             TransactionError.AMOUNT_TOO_LARGE ->
                 R.string.transaction_amount_too_large
+
+            TransactionError.DATABASE_ERROR ->
+                R.string.transaction_database_error
         }
 
         Text(

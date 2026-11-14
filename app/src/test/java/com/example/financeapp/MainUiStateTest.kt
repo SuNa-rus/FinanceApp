@@ -6,6 +6,19 @@ import org.junit.Test
 
 class MainUiStateTest {
 
+    private class TestDriver {
+        var uiState = MainUiState()
+            private set
+
+        fun onEvent(event: MainUiEvent) {
+            uiState = TransactionViewModel.reduce(uiState, event)
+        }
+
+        fun addTransaction() {
+            onEvent(TransactionViewModel.createAddEvent(uiState))
+        }
+    }
+
     @Test
     fun initialState_hasZeroBalanceAndEmptyHistory() {
         val state = MainUiState()
@@ -20,7 +33,7 @@ class MainUiStateTest {
 
     @Test
     fun addIncome_increasesBalance() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Зарплата"))
         viewModel.onEvent(MainUiEvent.AmountChanged("500"))
@@ -34,7 +47,7 @@ class MainUiStateTest {
 
     @Test
     fun addExpense_decreasesBalance() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Кофе"))
         viewModel.onEvent(MainUiEvent.AmountChanged("250"))
@@ -46,7 +59,7 @@ class MainUiStateTest {
 
     @Test
     fun multipleTransactions_updateBalanceAndHistory() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Кофе"))
         viewModel.onEvent(MainUiEvent.AmountChanged("250"))
@@ -65,7 +78,7 @@ class MainUiStateTest {
 
     @Test
     fun successfulTransaction_clearsForm() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Кофе"))
         viewModel.onEvent(MainUiEvent.AmountChanged("250"))
@@ -78,7 +91,7 @@ class MainUiStateTest {
 
     @Test
     fun emptyFields_showInvalidInput() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.addTransaction()
 
@@ -89,7 +102,7 @@ class MainUiStateTest {
 
     @Test
     fun zeroAmount_isRejected() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Кофе"))
         viewModel.onEvent(MainUiEvent.AmountChanged("0"))
@@ -101,7 +114,7 @@ class MainUiStateTest {
 
     @Test
     fun nonDigitAmount_isIgnored() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.AmountChanged("250"))
         viewModel.onEvent(MainUiEvent.AmountChanged("25a"))
@@ -111,7 +124,7 @@ class MainUiStateTest {
 
     @Test
     fun amountAboveIntRange_isRejected() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Покупка"))
         viewModel.onEvent(MainUiEvent.AmountChanged("2147483648"))
@@ -124,7 +137,7 @@ class MainUiStateTest {
 
     @Test
     fun balanceOverflow_isRejected() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Доход"))
         viewModel.onEvent(MainUiEvent.AmountChanged("2147483647"))
@@ -142,7 +155,7 @@ class MainUiStateTest {
 
     @Test
     fun descriptionChanged_updatesStateAndClearsError() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.InvalidTransaction)
         viewModel.onEvent(MainUiEvent.DescriptionChanged("Продукты"))
@@ -153,7 +166,7 @@ class MainUiStateTest {
 
     @Test
     fun typeChanged_updatesStateAndClearsError() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.InvalidTransaction)
         viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.INCOME))
@@ -164,7 +177,7 @@ class MainUiStateTest {
 
     @Test
     fun amountChanged_updatesStateAndClearsError() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(MainUiEvent.InvalidTransaction)
         viewModel.onEvent(MainUiEvent.AmountChanged("125"))
@@ -175,7 +188,7 @@ class MainUiStateTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun addTransactionEvent_rejectsNegativeAmount() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(
             MainUiEvent.AddTransaction(
@@ -190,7 +203,7 @@ class MainUiStateTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun addTransactionEvent_rejectsBlankDescription() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(
             MainUiEvent.AddTransaction(
@@ -205,7 +218,7 @@ class MainUiStateTest {
 
     @Test
     fun balanceUnderflow_isRejected() {
-        val viewModel = TransactionViewModel()
+        val viewModel = TestDriver()
 
         viewModel.onEvent(
             MainUiEvent.AddTransaction(
