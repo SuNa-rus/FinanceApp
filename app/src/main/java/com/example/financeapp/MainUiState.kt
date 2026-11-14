@@ -1,4 +1,4 @@
-﻿package com.example.financeapp
+package com.example.financeapp
 
 internal enum class TransactionType {
     INCOME,
@@ -8,6 +8,7 @@ internal enum class TransactionType {
 internal enum class TransactionError {
     INVALID_INPUT,
     AMOUNT_TOO_LARGE,
+    DATABASE_ERROR,
 }
 
 internal data class Transaction(
@@ -23,6 +24,9 @@ internal data class MainUiState(
     val balance: Int = 0,
     val transactionCount: Int = 0,
     val transactions: List<Transaction> = emptyList(),
+    val isLoading: Boolean = true,
+    val isSaving: Boolean = false,
+    val isDatabaseReady: Boolean = false,
     val error: TransactionError? = null,
 )
 
